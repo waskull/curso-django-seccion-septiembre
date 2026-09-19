@@ -31,6 +31,9 @@ class GuiaEnvio(models.Model):
 
     estado_actual = models.CharField(max_length=50, choices=ESTADOS_PAQUETE, default='registrado')
 
+    def __str__(self):
+        return f"{self.numero_guia} - {self.estado_actual} - Origen:{self.agencia_origen} - Destino:{self.agencia_destino.nombre}"
+
     def save(self, *args, **kwards):
         if not self.numero_guia:
             self.numero_guia =  uuid4().hex[:8].upper()
@@ -54,4 +57,5 @@ class HistorialSeguimiento(models.Model):
     actualiado_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
 
 
-# Create your models here.
+    def __str__(self):
+        return f"{self.estado} - {self.guia.numero_guia} - {self.actualiado_por.first_name} {self.actualiado_por.last_name}"
