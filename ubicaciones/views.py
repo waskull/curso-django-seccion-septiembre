@@ -2,33 +2,27 @@ from django.shortcuts import render
 from ubicaciones.models import Agencia, Ciudad, Estado
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.viewsets import ViewSet, ModelViewSet
 
 from rest_framework import status
+from ubicaciones.serializers import EstadoSerializer, CiudadSerializer, AgenciaSerializer, CiudadGETSerializer
 
 # Create your views here.
 class EstadoView(APIView):
     def get(self, request):
-        #print(self.request.method, self.request.data)
-        data = [
-            {
-                "id": estado.pk,
-                "nombre": estado.nombre
-            } for estado in Estado.objects.all()
-        ]
-
-        return Response(data, status=status.HTTP_200_OK)
+        data = Estado.objects.all()
+        serializer = EstadoSerializer(data, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
-        datos = self.request.data.copy()
-        print(datos)
-        existe = Estado.objects.filter(nombre__icontains=datos["nombre"]).exists()
-
+        serializer = EstadoSerializer(data=self.request.data)
+        serializer.is_valid(raise_exception=True)
+        existe = Estado.objects.filter(nombre__icontains=serializer.data["nombre"]).exists()
         if existe:
             return Response({"mensaje":"Ese estado ya existe"}, status=status.HTTP_400_BAD_REQUEST)
 
-        Estado.objects.create(**datos)
-
-        return Response({"mensaje":f"El estado {datos["nombre"]} ha sido creado"}, status=status.HTTP_201_CREATED)
+        Estado.objects.create(**serializer.data)
+        return Response({"mensaje":f"El estado {serializer.data["nombre"]} ha sido creado"}, status=status.HTTP_201_CREATED)
 
 class EstadoViewDetail(APIView):
     def get(self, request, pk=None):
@@ -36,12 +30,8 @@ class EstadoViewDetail(APIView):
             registro = Estado.objects.get(pk=pk)
         except Estado.DoesNotExist:
             return Response({"mensaje":"Ese estado no existe"}, status=status.HTTP_404_NOT_FOUND)
-        registro = {
-            "id": registro.id,
-            "nombre": registro.nombre
-        }
-
-        return Response(registro, status=status.HTTP_200_OK)
+        serializer = EstadoSerializer(registro)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def delete(self, request, pk=None):
             try:
@@ -52,67 +42,66 @@ class EstadoViewDetail(APIView):
     
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-    def put(self, request, pk=None):
+    def put(self, request, pk=None, is_partial=False):
         nombre = self.request.data["nombre"]
         if not nombre:
             return Response({"mensaje":"El nombre es requerido"}, status=status.HTTP_400_BAD_REQUEST)
         try:
             registro = Estado.objects.get(pk=pk)
-            registro.nombre = nombre
-            registro.save()
+            serializer = EstadoSerializer(registro, data=self.request.data, partial=is_partial)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({"mensaje":"El registro se ha editado"}, status=status.HTTP_200_OK)
         except Estado.DoesNotExist:
             return Response({"mensaje":"Ese estado no existe"}, status=status.HTTP_404_NOT_FOUND)
 
-
-        return Response({"mensaje":"El registro se ha editado"}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self,request,pk=None):
-        return self.put(request=request,pk=pk)
+        return self.put(request=request,pk=pk, is_partial=True)
 
 
-from rest_framework.viewsets import ViewSet
 
 class CiudadViewSet(ViewSet):
     def list(self, request):
-        data = [
-            {
-                "id": ciudad.pk,
-                "nombre": ciudad.nombre,
-                "estado": ciudad.estado.nombre
-            } for ciudad in Ciudad.objects.all()
-        ]
-
-        return Response(data, status=status.HTTP_200_OK)
+        serializer = CiudadGETSerializer(Ciudad.objects.all(), many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def retrieve(self, request, pk=None):
             try:
                 registro = Ciudad.objects.get(pk=pk)
+                serializer = CiudadGETSerializer(registro)
             except Ciudad.DoesNotExist:
                 return Response({"mensaje":"Esa ciudad no existe"}, status=status.HTTP_404_NOT_FOUND)
-            registro = {
-                "id": registro.id,
-                "nombre": registro.nombre,
-                "estado":registro.estado.nombre
-            }
-    
-            return Response(registro, status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request): #post para crear registros
-        datos = self.request.data.copy()
-        id_estado = datos["estado"]
+        serializer = CiudadSerializer(data=self.request.data)
+        serializer.is_valid(raise_exception=True)
+        id_estado = serializer.data["estado"]
         estado = Estado.objects.get(id=id_estado)
-        existe = Ciudad.objects.filter(nombre__icontains=datos["nombre"], estado=estado).exists()
+        existe = Ciudad.objects.filter(nombre__icontains=serializer.data["nombre"], estado=estado).exists()
 
         if existe:
-            return Response({"mensaje":f"{datos["nombre"]} ya existe registrada en el estado {estado.nombre}"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"mensaje":f"{serializer.data["nombre"]} ya existe registrada en el estado {estado.nombre}"}, status=status.HTTP_400_BAD_REQUEST)
 
-        Ciudad.objects.create(estado=estado,nombre=datos["nombre"])
+        Ciudad.objects.create(estado=estado,nombre=serializer.data["nombre"])
 
-        return Response({"mensaje":f"La ciudad {datos["nombre"]} ha sido creada"}, status=status.HTTP_201_CREATED)
+        return Response({"mensaje":f"La ciudad {serializer.data["nombre"]} ha sido creada"}, status=status.HTTP_201_CREATED)
 
     def update(self,request,pk=None): #metodo http para editar todo un recurso. put
         pass
     def partial_update(self,request,pk=None): #metodo para editar un recurso parcialmente, patch
         pass
     def delete(self,request,pk=None): #delete
-        ...
+        try:
+            ciudad = Ciudad.objects.get(pk=pk)
+            ciudad.delete()
+            return Response({"mensaje":"La ciudad se ha borrado"}, status=status.HTTP_204_NO_CONTENT)
+        except Ciudad.DoesNotExist:
+            return Response({"mensaje":"No existe la ciudad que intentas borrar"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class AgenciaViewSet(ModelViewSet):
+    serializer_class = AgenciaSerializer
+    queryset = Agencia.objects.all() 

@@ -14,7 +14,7 @@ ESTADOS_PAQUETE = (
 )
 
 class GuiaEnvio(models.Model):
-    numero_guia = models.CharField(max_length=30, null=True, blank=True)
+    numero_guia = models.CharField(max_length=30, null=True, blank=True, unique=True)
     remitente = models.ForeignKey(User, on_delete=models.CASCADE, related_name="remitentes")
     destinatario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="destinatarios")
 

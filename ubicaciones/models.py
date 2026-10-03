@@ -24,7 +24,7 @@ class Ciudad(models.Model):
 
 class Agencia(models.Model):
     nombre = models.CharField(max_length=50)
-    codigo = models.CharField(max_length=50)
+    codigo = models.CharField(max_length=50, unique=True)
     direccion = models.CharField(max_length=255)
     ciudad = models.ForeignKey(Ciudad, on_delete=models.RESTRICT)
     rif = models.CharField(max_length=50)
