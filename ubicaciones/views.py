@@ -11,6 +11,12 @@ from ubicaciones.serializers import EstadoSerializer, CiudadSerializer, AgenciaS
 class EstadoView(APIView):
     def get(self, request):
         data = Estado.objects.all()
+
+        nombre = self.request.query_params.get('nombre')
+
+        if nombre:
+            data = data.filter(nombre__icontains=nombre)
+
         serializer = EstadoSerializer(data, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -64,7 +70,20 @@ class EstadoViewDetail(APIView):
 
 class CiudadViewSet(ViewSet):
     def list(self, request):
-        serializer = CiudadGETSerializer(Ciudad.objects.all(), many=True)
+        queryset = Ciudad.objects.all()
+        nombre = self.request.query_params.get('nombre')
+        estado = int(self.request.query_params.get('estado'))
+
+        if nombre:                       
+            queryset = queryset.filter(nombre__icontains=nombre) 
+
+        if estado:
+            queryset = queryset.filter(estado=estado)
+
+        
+        #http://localhost:8000/ciudad?nombre=m&estado=1
+        print(estado)
+        serializer = CiudadGETSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def retrieve(self, request, pk=None):

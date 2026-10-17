@@ -36,7 +36,7 @@ class GuiaEnvio(models.Model):
 
     def save(self, *args, **kwards):
         if not self.numero_guia:
-            self.numero_guia =  uuid4().hex[:8].upper()
+            self.numero_guia =  uuid4().hex.upper()
 
         super().save(*args,**kwards)
 
