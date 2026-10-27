@@ -3,7 +3,7 @@ from ubicaciones.models import Agencia, Ciudad, Estado
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet, ModelViewSet
-
+from rest_framework.pagination import PageNumberPagination,  LimitOffsetPagination
 from rest_framework import status
 from ubicaciones.serializers import EstadoSerializer, CiudadSerializer, AgenciaSerializer, CiudadGETSerializer
 
@@ -72,7 +72,9 @@ class CiudadViewSet(ViewSet):
     def list(self, request):
         queryset = Ciudad.objects.all()
         nombre = self.request.query_params.get('nombre')
-        estado = int(self.request.query_params.get('estado'))
+        
+        estado_param = self.request.query_params.get('estado')
+        estado = int(estado_param) if estado_param is not None and estado_param != '' else None
 
         if nombre:                       
             queryset = queryset.filter(nombre__icontains=nombre) 
@@ -80,9 +82,14 @@ class CiudadViewSet(ViewSet):
         if estado:
             queryset = queryset.filter(estado=estado)
 
-        
-        #http://localhost:8000/ciudad?nombre=m&estado=1
-        print(estado)
+        paginador = PageNumberPagination()
+
+        datos = paginador.paginate_queryset(queryset, request, view=self)
+
+        if datos is not None:
+            serializer = CiudadGETSerializer(datos, many=True)
+            return paginador.get_paginated_response(serializer.data)
+
         serializer = CiudadGETSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

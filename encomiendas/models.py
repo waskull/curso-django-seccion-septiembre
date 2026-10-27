@@ -48,6 +48,9 @@ class GuiaEnvio(models.Model):
                 observacion="El producto se ha registrado satisfactoriamente",
             )
 
+    def __str__(self):
+        return f"{self.pk} - {self.numero_guia} - {self.estado_actual}"
+
     
 class HistorialSeguimiento(models.Model):
     guia = models.ForeignKey(GuiaEnvio, on_delete=models.CASCADE)
