@@ -2,11 +2,21 @@ from rest_framework.viewsets import ModelViewSet
 from encomiendas.models import GuiaEnvio, HistorialSeguimiento
 from encomiendas.serializers import GuiaSerializer, HistorialSerializer
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated,IsAuthenticatedOrReadOnly
+
+#AllowAny permite cualquier peticion entrante
+#IsAdminUser Solo administradores
+#IsAuthenticated: Debe estar autenticado para acceder a el recurso
+#IsAuthenticatedOrReadOnly: Este permiso permite que el usuario no este autenticado para las peticiones GET, pero el resto de peticiones HTTP si requiere estar autenticado
+
 
 class GuiaViewSet(ModelViewSet):
     serializer_class = GuiaSerializer
     queryset = GuiaEnvio.objects.all()
     lookup_field = "numero_guia"
+    permission_classes = [IsAuthenticatedOrReadOnly,]
+
+    #http_method_names = ["get", "post", "patch", "put", "delete"]
 
     #RE HACER METODO CREATE PARA TRAER PRECIO DEL BCV
 
