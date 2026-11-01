@@ -9,18 +9,13 @@ class PerfilSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class EmailLoginSerializer(TokenObtainPairSerializer):
-    email = serializers.EmailField(write_only=True)
-    password = serializers.CharField(write_only=True)
     username_field = "email"
-
-    #AGREGAR METODO DE AUTENTICACION PERSONALIZADO
-
     def validate(self, datos):
 
         correo = datos.get("email")
         clave = datos.get("password")
         if correo and clave:
-            usuario = authenticate(request=self.context.get("request"), username=correo, password=clave)
+            usuario = authenticate(request=self.context.get("request"), email=correo, password=clave)
 
             if not usuario:
                 raise serializers.ValidationError("Credenciales invalidas")
