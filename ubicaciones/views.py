@@ -115,10 +115,47 @@ class CiudadViewSet(ViewSet):
 
         return Response({"mensaje":f"La ciudad {serializer.data["nombre"]} ha sido creada"}, status=status.HTTP_201_CREATED)
 
-    def update(self,request,pk=None): #metodo http para editar todo un recurso. put
-        pass
-    def partial_update(self,request,pk=None): #metodo para editar un recurso parcialmente, patch
-        pass
+    def update(self, request, pk=None): # método http para editar todo un recurso (PUT)
+        try:
+            ciudad = Ciudad.objects.get(pk=pk)
+        except Ciudad.DoesNotExist:
+            return Response({"mensaje": "Esa ciudad no existe"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = CiudadSerializer(ciudad, data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        nombre = serializer.validated_data.get("nombre")
+        estado_input = serializer.validated_data.get("estado")
+        
+        estado = estado_input if isinstance(estado_input, Estado) else Estado.objects.get(id=estado_input)
+
+        existe = Ciudad.objects.filter(nombre__icontains=nombre, estado=estado).exclude(pk=pk).exists()
+        if existe:
+            return Response({"mensaje": f"{nombre} ya existe registrada en el estado {estado.nombre}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+        return Response({"mensaje": f"La ciudad {nombre} ha sido actualizada correctamente"}, status=status.HTTP_200_OK)
+
+    def partial_update(self, request, pk=None): # método para editar un recurso parcialmente (PATCH)
+        try:
+            ciudad = Ciudad.objects.get(pk=pk)
+        except Ciudad.DoesNotExist:
+            return Response({"mensaje": "Esa ciudad no existe"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = CiudadSerializer(ciudad, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        nombre = serializer.validated_data.get("nombre", ciudad.nombre)
+        estado_input = serializer.validated_data.get("estado", ciudad.estado)
+        
+        estado = estado_input if isinstance(estado_input, Estado) else Estado.objects.get(id=estado_input)
+
+        existe = Ciudad.objects.filter(nombre__icontains=nombre, estado=estado).exclude(pk=pk).exists()
+        if existe:
+            return Response({"mensaje": f"{nombre} ya existe registrada en el estado {estado.nombre}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+        return Response({"mensaje": f"La ciudad {nombre} ha sido actualizada parcialmente"}, status=status.HTTP_200_OK)
     def delete(self,request,pk=None): #delete
         try:
             ciudad = Ciudad.objects.get(pk=pk)
