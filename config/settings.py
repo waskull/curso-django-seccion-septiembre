@@ -15,10 +15,17 @@ SECRET_KEY = getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 v = getenv("DEBUG")
-DEBUG = True if v == "True" else "False"
+DEBUG = True if v == "True" else False
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    
+]
 
+#CSRF_TRUSTED_ORIGINS = [
+#    'localhost'
+#]
 
 # Application definition
 
@@ -38,6 +45,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -90,8 +98,13 @@ REST_FRAMEWORK = {
 
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
-    )
+    ),
+
+    'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer',]
 }
+
+if DEBUG:
+    REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"].append('rest_framework.renderers.BrowsableAPIRenderer')
 
 from datetime import timedelta
 
@@ -140,6 +153,16 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles":{
+        "BACKEND":"whitenoise.storage.CompressedManifestStaticFilesStorage"
+    },
+}
 
 
 # Email
