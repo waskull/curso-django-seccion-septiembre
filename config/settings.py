@@ -18,7 +18,7 @@ v = getenv("DEBUG")
 DEBUG = True if v == "True" else False
 
 ALLOWED_HOSTS = [
-    'rapienvios.onrender.com'
+    'rapienvios.onrender.com',
     'localhost',
     '127.0.0.1',
 ]
