@@ -20,11 +20,11 @@ DEBUG = True if v == "True" else False
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    'https://rapienvios.onrender.com'
+    'rapienvios.onrender.com'
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://rapienvios.onrender.com'
+    'rapienvios.onrender.com'
 ]
 
 # Application definition
