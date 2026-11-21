@@ -6,7 +6,7 @@ from django.conf import settings
 def generar_respuesta_llamacpp(prompt: str, pregunta: str, n_predict: int = 384, temperatura: float = 0.8):
     url = f"{settings.LLAMACPP_API}"
     payload = {
-        "model": "ACADEMOS xd",
+        "model": "modelo_local Bv",
         "messages": [
             {"role": "system", "content": prompt},
             {"role": "user", "content": pregunta}
