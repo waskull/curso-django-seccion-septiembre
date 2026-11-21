@@ -6,8 +6,6 @@ class ConversacionSerializer(ModelSerializer):
         model = Conversacion
         fields = '__all__'
         extra_kwargs = {
-            "fecha_creacion": {"read_only": True},
-            "fecha_actualizacion": {"read_only": True},
             "usuario": {"read_only": True},
             "respuesta": {"read_only": True},
         }
