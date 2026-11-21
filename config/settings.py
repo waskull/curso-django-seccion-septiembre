@@ -12,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 #print(getenv("SECRET_KEY")) #COSAS QUE NO SE DEBEN DE HACER
 SECRET_KEY = getenv("SECRET_KEY")
-
+LLAMACPP_API = getenv("LLAMACPP_API")
 # SECURITY WARNING: don't run with debug turned on in production!
 v = getenv("DEBUG")
 DEBUG = True if v == "True" else False
@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'cuentas',
     'encomiendas',
-    'ubicaciones'
+    'ubicaciones',
+    'chatbot'
 ]
 
 MIDDLEWARE = [

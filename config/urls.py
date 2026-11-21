@@ -5,7 +5,7 @@ from ubicaciones.views import CiudadViewSet, EstadoView, EstadoViewDetail, Agenc
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
 from cuentas.views import AuthView
-
+from chatbot.views import ChatbotView
 router = DefaultRouter()
 router.register(r'ciudad', basename="ciudades", viewset=CiudadViewSet)
 router.register(r'agencia', basename='agencias', viewset=AgenciaViewSet)
@@ -18,5 +18,6 @@ urlpatterns = [
     path('estado/<int:pk>/', name="estado", view=EstadoViewDetail.as_view()),
     path('auth/login/', name="login",view=AuthView.as_view()),
     path('auth/refresh/', name="refresh_token", view=TokenRefreshView.as_view()),
+    path('chatbot/', ChatbotView.as_view(), name="chatbot"),
     path('', include(router.urls))
 ]
