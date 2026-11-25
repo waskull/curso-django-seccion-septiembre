@@ -13,6 +13,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 #print(getenv("SECRET_KEY")) #COSAS QUE NO SE DEBEN DE HACER
 SECRET_KEY = getenv("SECRET_KEY")
 LLAMACPP_API = getenv("LLAMACPP_API")
+GROQ_API = getenv("GROQ_API")
+OR_API = getenv("OR_API")
+OR_KEY = getenv("OR_KEY")
+GROQ_KEY = getenv("GROQ_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 v = getenv("DEBUG")
 DEBUG = True if v == "True" else False

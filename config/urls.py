@@ -4,9 +4,10 @@ from encomiendas.views import GuiaViewSet, HistorialViewSet
 from ubicaciones.views import CiudadViewSet, EstadoView, EstadoViewDetail, AgenciaViewSet
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
-from cuentas.views import AuthView
+from cuentas.views import AuthView, UsuarioViewSet
 from chatbot.views import ChatbotView
 router = DefaultRouter()
+router.register(r'usuario', basename="usuarios", viewset=UsuarioViewSet)
 router.register(r'ciudad', basename="ciudades", viewset=CiudadViewSet)
 router.register(r'agencia', basename='agencias', viewset=AgenciaViewSet)
 router.register(r'guia', basename='guias', viewset=GuiaViewSet)

@@ -2,11 +2,25 @@ from rest_framework import serializers
 from cuentas.models import Perfil
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
 
 class PerfilSerializer(serializers.ModelSerializer):
     class Meta:
         model = Perfil
-        fields = "__all__"
+        fields = ('rol','cedula','telefono','direccion')
+
+class UsuarioSerializer(serializers.ModelSerializer):
+    perfil = PerfilSerializer()
+    password = serializers.CharField(write_only=True)
+    email = serializers.EmailField(required=True)
+
+    def validate_email(self, correo):
+        if User.objects.filter(email=correo).exists():
+            raise serializers.ValidationError("Ese correo ya existe")
+
+    class Meta:
+        model = User
+        fields = ('id', 'username','email','password','first_name', 'last_name', 'perfil')
 
 class EmailLoginSerializer(TokenObtainPairSerializer):
     username_field = "email"

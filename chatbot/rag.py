@@ -3,10 +3,22 @@ import requests
 from django.conf import settings
 
 
-def generar_respuesta_llamacpp(prompt: str, pregunta: str, n_predict: int = 384, temperatura: float = 0.8):
-    url = f"{settings.LLAMACPP_API}"
+def generar_respuesta(prompt: str, pregunta: str, modelo: str, engine: str, n_predict: int = 384, temperatura: float = 0.8):
+    if engine == "groq":
+        url = f"{settings.GROQ_API}"
+        headers = {
+            "Content-Type":"application/json",
+            "Authorization": f"Bearer {settings.GROQ_KEY}"
+        }
+    elif engine == "openrouter":
+        url = f"{settings.OR_API}"
+        headers = {
+                    "Content-Type":"application/json",
+                    "Authorization": f"Bearer {settings.OR_KEY}"
+                }
+    else: url = f"{settings.LLAMACPP_API}"
     payload = {
-        "model": "modelo_local Bv",
+        "model": modelo,
         "messages": [
             {"role": "system", "content": prompt},
             {"role": "user", "content": pregunta}
@@ -18,10 +30,10 @@ def generar_respuesta_llamacpp(prompt: str, pregunta: str, n_predict: int = 384,
     }
     
     print("haciendo peticion a: ", url)
-    resp = requests.post(url, json=payload, timeout=900)
+    resp = requests.post(url, json=payload, timeout=900, headers=headers)
     resp.raise_for_status()
     data = resp.json()
-    return data["choices"][0]["message"]["content"]
+    return limpiar_respuesta(data["choices"][0]["message"]["content"])
 
 def limpiar_respuesta(respuesta: str):
     texto = re.sub(r"```+", "", respuesta)
