@@ -4,6 +4,7 @@ from django.conf import settings
 
 
 def generar_respuesta(prompt: str, pregunta: str, modelo: str, engine: str, n_predict: int = 384, temperatura: float = 0.8):
+    headers = {}
     if engine == "groq":
         url = f"{settings.GROQ_API}"
         headers = {

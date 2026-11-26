@@ -33,16 +33,16 @@ class ChatbotView(APIView):
         
         agencias = Agencia.objects.all()
         guias = GuiaEnvio.objects.all()
-        historiales = Conversacion.objects.filter(usuario=self.request.user)[:5]
+        historiales = Conversacion.objects.filter(usuario=self.request.user)[:4]
         historial = "\n".join(
             [f"Pregunta: {h.pregunta.lower()} - Respuesta: {h.respuesta.lower()}" for h in historiales]
         ) 
         contexto = "\n".join(
             [f"Paquete: {p.numero_guia} | Remitente: {p.remitente} | Destinatario: {p.destinatario} | Peso: {p.peso_kg} | Estado: {p.estado_actual.lower()}" for p in guias])
-
-        contexto = contexto.join(
-                    [f"\nAgencia: {p.nombre} | Ciudad: {p.ciudad} | Direccion: {p.direccion}" for p in agencias])
         
+        lista_agencias = "\n".join(
+                    [f"Agencia: {p.nombre} | Ciudad: {p.ciudad} | Direccion: {p.direccion}" for p in agencias])
+        if lista_agencias: contexto+=f"\n {lista_agencias}"
         if historial == None or historial == "":
             historial = "SIN HISTORIAL RELEVANTE"
         SYSTEM_PROMPT = (
@@ -54,7 +54,7 @@ class ChatbotView(APIView):
         prompt = (
             f"{SYSTEM_PROMPT}\n\n"
             f"=== CONTEXT ===\n{contexto}\n\n"
-            f"=== HISTORIAL === \n {historial}\n"
+            f"=== HISTORIAL PREVIO === \n {historial}\n"
             "=== INSTRUCCIÓN ===\n"
             "Responde solo con información del contexto. Sé claro, conciso y emite la respuesta en texto plano.\n"
         )
@@ -66,9 +66,7 @@ class ChatbotView(APIView):
             print("Pregunta:", pregunta)
             print("Engine:", engine)
             if engine != "google": respuesta = generar_respuesta(prompt,pregunta, temperatura=temperatura,modelo=modelo, engine=engine)
-
             else: respuesta = generar_respuesta_google(prompt,pregunta, temperatura=temperatura,modelo=modelo)
-
 
             print("Respuesta:", respuesta)
             LISTA_ERROR = ["No puedo responder a esa pregunta.",
@@ -78,5 +76,4 @@ class ChatbotView(APIView):
                return Response({"pregunta": pregunta, "respuesta": respuesta})
         except Exception as e:
             return Response({"error": str(e)}, status=500)
-
         return Response({"mensaje":"Un error desconocido ha ocurrido"}, status=status.HTTP_400_BAD_REQUEST)
