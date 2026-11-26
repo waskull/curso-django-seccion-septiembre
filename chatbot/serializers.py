@@ -4,8 +4,5 @@ from chatbot.models import Conversacion
 class ConversacionSerializer(ModelSerializer):
     class Meta:
         model = Conversacion
-        fields = '__all__'
-        extra_kwargs = {
-            "usuario": {"read_only": True},
-            "respuesta": {"read_only": True},
-        }
+        fields = ('pregunta','respuesta','modelo','temperatura','usuario')
+        read_only_fields=('usuario','respuesta')

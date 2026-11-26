@@ -54,3 +54,27 @@ def limpiar_respuesta(respuesta: str):
         texto = texto.replace("Asistente:\n", "").strip()
 
     return texto.replace("===\nRespuesta\nHistorial relevante:\n", "")
+
+def generar_respuesta_google(prompt: str, pregunta: str, modelo: str, n_predict: int = 384, temperatura: float = 0.8):
+    url = f"https://generativelanguage.googleapis.com/v1/models/{modelo}:generateContent"
+    headers = {
+        "Content-Type":"application/json",
+        "x-goog-api-key": settings.GOOGLE_KEY
+    }
+    prompt = prompt.join(f"""\n
+        Pregunta del Usuario: {pregunta}\n
+    """)
+    payload = {
+        "contents": [{
+        "parts": [{"text": prompt}]
+        }
+        ],
+        "generationConfig": {
+            "temperature": temperatura
+        }
+    }
+    print("haciendo peticion a: ", url)
+    resp = requests.post(url, json=payload, timeout=900, headers=headers)
+    resp.raise_for_status()
+    data = resp.json()
+    return data["candidates"][0]["content"]["parts"][0]["text"]

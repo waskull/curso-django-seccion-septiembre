@@ -6,26 +6,31 @@ from django.contrib.auth.models import User
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from chatbot.models import Conversacion
 from chatbot.serializers import ConversacionSerializer
-from chatbot.rag import generar_respuesta
+from chatbot.rag import generar_respuesta, generar_respuesta_google
 from ubicaciones.models import Agencia
 from encomiendas.models import GuiaEnvio
-
 
 class ChatbotView(APIView):
     serializer_class = ConversacionSerializer
 
     def get(self,request):
-        #Terminar semana que viene
-        datos = Conversacion.objects.all()
+        datos = Conversacion.objects.filter(usuario=self.request.user)
         serializer = ConversacionSerializer(datos, many=True)
-        return Response(serializer.data,status=200)
+        return Response(serializer.data,status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         engine = self.request.query_params.get('engine', "openrouter").lower()
+        modelo = serializer.validated_data.get("modelo", "openai/gpt-oss-120b")
         pregunta = serializer.validated_data["pregunta"].lower()
 
+        if engine == "groq" and modelo not in ('openai/gpt-oss-120b','openai/gpt-oss-20b','qwen/qwen3.8-27b'):
+            return Response({"error":"El modelo seleccionado no esta disponible para groq"},status=status.HTTP_400_BAD_REQUEST)
+        
+        if engine == "google" and modelo not in ('gemma-4-26b-a4b-it','gemma-4-31b-it','gemini-3.5-flash-lite','gemini-3.8-flash','gemini-3.6-flash'):
+            return Response({"error":"El modelo seleccionado no esta disponible para Google AI Studio"},status=status.HTTP_400_BAD_REQUEST)
+        
         agencias = Agencia.objects.all()
         guias = GuiaEnvio.objects.all()
         historiales = Conversacion.objects.filter(usuario=self.request.user)[:5]
@@ -37,6 +42,7 @@ class ChatbotView(APIView):
 
         contexto = contexto.join(
                     [f"\nAgencia: {p.nombre} | Ciudad: {p.ciudad} | Direccion: {p.direccion}" for p in agencias])
+        
         if historial == None or historial == "":
             historial = "SIN HISTORIAL RELEVANTE"
         SYSTEM_PROMPT = (
@@ -52,14 +58,18 @@ class ChatbotView(APIView):
             "=== INSTRUCCIÓN ===\n"
             "Responde solo con información del contexto. Sé claro, conciso y emite la respuesta en texto plano.\n"
         )
+
         temperatura = serializer.validated_data.get("temperatura", 0.8)
-        modelo = serializer.validated_data.get("modelo", "openai/gpt-oss-120b")
         try:
             print("Haciendo petición a Llama.cpp con el modelo:", modelo)
             print("Prompt:", prompt)
             print("Pregunta:", pregunta)
             print("Engine:", engine)
-            respuesta = generar_respuesta(prompt,pregunta, temperatura=temperatura,modelo=modelo, engine=engine)
+            if engine != "google": respuesta = generar_respuesta(prompt,pregunta, temperatura=temperatura,modelo=modelo, engine=engine)
+
+            else: respuesta = generar_respuesta_google(prompt,pregunta, temperatura=temperatura,modelo=modelo)
+
+
             print("Respuesta:", respuesta)
             LISTA_ERROR = ["No puedo responder a esa pregunta.",
                            "No puedo responder a tu pregunta.", "No puedo responder a tu pregunta", ""]
@@ -69,4 +79,4 @@ class ChatbotView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=500)
 
-        return Response({"pregunta": pregunta, "respuesta": respuesta})
+        return Response({"mensaje":"Un error desconocido ha ocurrido"}, status=status.HTTP_400_BAD_REQUEST)

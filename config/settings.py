@@ -17,6 +17,7 @@ GROQ_API = getenv("GROQ_API")
 OR_API = getenv("OR_API")
 OR_KEY = getenv("OR_KEY")
 GROQ_KEY = getenv("GROQ_KEY")
+GOOGLE_KEY = getenv("GOOGLE_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 v = getenv("DEBUG")
 DEBUG = True if v == "True" else False
